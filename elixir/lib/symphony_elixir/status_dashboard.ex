@@ -1150,6 +1150,41 @@ defmodule SymphonyElixir.StatusDashboard do
   defp humanize_codex_event(:turn_failed, _message, payload), do: humanize_codex_method("turn/failed", payload)
   defp humanize_codex_event(:turn_cancelled, _message, _payload), do: "turn cancelled"
   defp humanize_codex_event(:malformed, _message, _payload), do: "malformed JSON event from codex"
+
+  # Claude Code stream-json events use "type" instead of "method"
+  defp humanize_codex_event(:notification, _message, %{"type" => "assistant"} = payload) do
+    case get_in(payload, ["message", "content"]) do
+      [%{"text" => text} | _] when is_binary(text) -> "claude: #{String.slice(text, 0, 120)}"
+      _ ->
+        case Map.get(payload, "message") do
+          msg when is_binary(msg) -> "claude: #{String.slice(msg, 0, 120)}"
+          _ -> "claude: assistant message"
+        end
+    end
+  end
+
+  defp humanize_codex_event(:notification, _message, %{"type" => "tool_use"} = payload) do
+    tool = Map.get(payload, "tool") || Map.get(payload, "name") || "unknown"
+    "claude tool: #{tool}"
+  end
+
+  defp humanize_codex_event(:notification, _message, %{"type" => "tool_result"}), do: "claude tool result"
+
+  defp humanize_codex_event(:turn_completed, _message, %{"type" => "result"} = payload) do
+    usage = Map.get(payload, "usage")
+
+    usage_suffix =
+      case usage do
+        %{"input_tokens" => i, "output_tokens" => o} when is_integer(i) and is_integer(o) ->
+          " (#{i}+#{o} tokens)"
+
+        _ ->
+          ""
+      end
+
+    "turn completed#{usage_suffix}"
+  end
+
   defp humanize_codex_event(_event, _message, _payload), do: nil
 
   defp unwrap_codex_message_payload(%{} = message) do

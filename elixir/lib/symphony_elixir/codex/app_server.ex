@@ -3,6 +3,8 @@ defmodule SymphonyElixir.Codex.AppServer do
   Minimal client for the Codex app-server JSON-RPC 2.0 stream over stdio.
   """
 
+  @behaviour SymphonyElixir.AgentServer
+
   require Logger
   alias SymphonyElixir.{Codex.DynamicTool, Config, PathSafety, SSH}
 
@@ -36,6 +38,7 @@ defmodule SymphonyElixir.Codex.AppServer do
     end
   end
 
+  @impl true
   @spec start_session(Path.t(), keyword()) :: {:ok, session()} | {:error, term()}
   def start_session(workspace, opts \\ []) do
     worker_host = Keyword.get(opts, :worker_host)
@@ -66,6 +69,7 @@ defmodule SymphonyElixir.Codex.AppServer do
     end
   end
 
+  @impl true
   @spec run_turn(session(), String.t(), map(), keyword()) :: {:ok, map()} | {:error, term()}
   def run_turn(
         %{
@@ -139,6 +143,7 @@ defmodule SymphonyElixir.Codex.AppServer do
     end
   end
 
+  @impl true
   @spec stop_session(session()) :: :ok
   def stop_session(%{port: port}) when is_port(port) do
     stop_port(port)

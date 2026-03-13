@@ -8,6 +8,7 @@ defmodule SymphonyElixir.TestSupport do
 
       alias SymphonyElixir.AgentRunner
       alias SymphonyElixir.CLI
+      alias SymphonyElixir.Claude
       alias SymphonyElixir.Codex.AppServer
       alias SymphonyElixir.Config
       alias SymphonyElixir.HttpServer
@@ -107,6 +108,13 @@ defmodule SymphonyElixir.TestSupport do
           max_turns: 20,
           max_retry_backoff_ms: 300_000,
           max_concurrent_agents_by_state: %{},
+          agent_backend: "codex",
+          claude_command: "claude",
+          claude_model: "claude-sonnet-4-20250514",
+          claude_permission_mode: "bypassPermissions",
+          claude_allowed_tools: [],
+          claude_turn_timeout_ms: 3_600_000,
+          claude_stall_timeout_ms: 300_000,
           codex_command: "codex app-server",
           codex_approval_policy: %{reject: %{sandbox_approval: true, rules: true, mcp_elicitations: true}},
           codex_thread_sandbox: "workspace-write",
@@ -144,6 +152,13 @@ defmodule SymphonyElixir.TestSupport do
     max_turns = Keyword.get(config, :max_turns)
     max_retry_backoff_ms = Keyword.get(config, :max_retry_backoff_ms)
     max_concurrent_agents_by_state = Keyword.get(config, :max_concurrent_agents_by_state)
+    agent_backend = Keyword.get(config, :agent_backend)
+    claude_command = Keyword.get(config, :claude_command)
+    claude_model = Keyword.get(config, :claude_model)
+    claude_permission_mode = Keyword.get(config, :claude_permission_mode)
+    claude_allowed_tools = Keyword.get(config, :claude_allowed_tools)
+    claude_turn_timeout_ms = Keyword.get(config, :claude_turn_timeout_ms)
+    claude_stall_timeout_ms = Keyword.get(config, :claude_stall_timeout_ms)
     codex_command = Keyword.get(config, :codex_command)
     codex_approval_policy = Keyword.get(config, :codex_approval_policy)
     codex_thread_sandbox = Keyword.get(config, :codex_thread_sandbox)
@@ -180,10 +195,18 @@ defmodule SymphonyElixir.TestSupport do
         "  root: #{yaml_value(workspace_root)}",
         worker_yaml(worker_ssh_hosts, worker_max_concurrent_agents_per_host),
         "agent:",
+        "  backend: #{yaml_value(agent_backend)}",
         "  max_concurrent_agents: #{yaml_value(max_concurrent_agents)}",
         "  max_turns: #{yaml_value(max_turns)}",
         "  max_retry_backoff_ms: #{yaml_value(max_retry_backoff_ms)}",
         "  max_concurrent_agents_by_state: #{yaml_value(max_concurrent_agents_by_state)}",
+        "claude:",
+        "  command: #{yaml_value(claude_command)}",
+        "  model: #{yaml_value(claude_model)}",
+        "  permission_mode: #{yaml_value(claude_permission_mode)}",
+        "  allowed_tools: #{yaml_value(claude_allowed_tools)}",
+        "  turn_timeout_ms: #{yaml_value(claude_turn_timeout_ms)}",
+        "  stall_timeout_ms: #{yaml_value(claude_stall_timeout_ms)}",
         "codex:",
         "  command: #{yaml_value(codex_command)}",
         "  approval_policy: #{yaml_value(codex_approval_policy)}",
