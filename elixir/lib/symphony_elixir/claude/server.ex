@@ -22,8 +22,8 @@ defmodule SymphonyElixir.Claude.Server do
         }
 
   @impl true
-  @spec start_session(Path.t()) :: {:ok, session()} | {:error, term()}
-  def start_session(workspace) do
+  @spec start_session(Path.t(), keyword()) :: {:ok, session()} | {:error, term()}
+  def start_session(workspace, _opts \\ []) do
     with {:ok, expanded_workspace} <- validate_workspace(workspace) do
       session_id = generate_session_id()
       Logger.info("Claude session created session_id=#{session_id} workspace=#{expanded_workspace}")

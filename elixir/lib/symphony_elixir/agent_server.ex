@@ -5,7 +5,7 @@ defmodule SymphonyElixir.AgentServer do
 
   @type session :: map()
 
-  @callback start_session(workspace :: Path.t()) :: {:ok, session()} | {:error, term()}
+  @callback start_session(workspace :: Path.t(), opts :: keyword()) :: {:ok, session()} | {:error, term()}
 
   @callback run_turn(session(), prompt :: String.t(), issue :: map(), opts :: keyword()) ::
               {:ok, map()} | {:error, term()}
