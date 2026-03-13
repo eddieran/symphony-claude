@@ -15,13 +15,22 @@ This directory contains the current Elixir/OTP implementation of Symphony, based
 
 1. Polls Linear for candidate work
 2. Creates a workspace per issue
-3. Launches Codex in [App Server mode](https://developers.openai.com/codex/app-server/) inside the
-   workspace
-4. Sends a workflow prompt to Codex
-5. Keeps Codex working on the issue until the work is done
+3. Launches a coding agent (Codex or Claude Code) inside the workspace
+4. Sends a workflow prompt to the agent
+5. Keeps the agent working on the issue until the work is done
 
-During app-server sessions, Symphony also serves a client-side `linear_graphql` tool so that repo
-skills can make raw Linear GraphQL calls.
+Symphony supports two agent backends:
+
+- **Codex** (default): Uses [App Server mode](https://developers.openai.com/codex/app-server/) with
+  JSON-RPC 2.0 over stdio. A single persistent process handles all turns.
+- **Claude Code**: Uses the `claude` CLI in print mode (`-p`) with `--output-format stream-json`.
+  Each turn spawns a fresh process; multi-turn context is preserved via `--resume <prev-session>
+  --fork-session`.
+
+The backend is selected via `agent.backend` in the WORKFLOW.md front matter.
+
+During Codex app-server sessions, Symphony also serves a client-side `linear_graphql` tool so that
+repo skills can make raw Linear GraphQL calls.
 
 If a claimed issue moves to a terminal state (`Done`, `Closed`, `Cancelled`, or `Duplicate`),
 Symphony stops the active agent for that issue and cleans up matching workspaces.
@@ -96,10 +105,17 @@ hooks:
   after_create: |
     git clone git@github.com:your-org/your-repo.git .
 agent:
+  backend: codex          # or "claude"
   max_concurrent_agents: 10
   max_turns: 20
 codex:
   command: codex app-server
+claude:
+  command: claude
+  model: claude-sonnet-4-20250514
+  permission_mode: bypassPermissions
+  allowed_tools: []
+  turn_timeout_ms: 3600000
 ---
 
 You are working on a Linear issue {{ issue.identifier }}.
@@ -109,6 +125,13 @@ Title: {{ issue.title }} Body: {{ issue.description }}
 
 Notes:
 
+- `agent.backend` selects the coding agent: `"codex"` (default) or `"claude"`.
+- When using Claude Code, the `claude` section configures the CLI behavior:
+  - `claude.command`: path to the `claude` binary (default: `claude`)
+  - `claude.model`: model to use (e.g. `claude-sonnet-4-20250514`, `claude-opus-4-20250514`)
+  - `claude.permission_mode`: permission level (`default`, `acceptEdits`, `bypassPermissions`)
+  - `claude.allowed_tools`: list of tool names to allow (e.g. `["Bash", "Read", "Edit"]`)
+  - `claude.turn_timeout_ms`: per-turn timeout in milliseconds (default: `3600000`)
 - If a value is missing, defaults are used.
 - Safer Codex defaults are used when policy fields are omitted:
   - `codex.approval_policy` defaults to `{"reject":{"sandbox_approval":true,"rules":true,"mcp_elicitations":true}}`

@@ -48,6 +48,14 @@ defmodule SymphonyElixir.Config do
     end
   end
 
+  @spec agent_server_module() :: module()
+  def agent_server_module do
+    case settings!().agent.backend do
+      "claude" -> SymphonyElixir.Claude.Server
+      _codex -> SymphonyElixir.Codex.AppServer
+    end
+  end
+
   @spec max_concurrent_agents_for_state(term()) :: pos_integer()
   def max_concurrent_agents_for_state(state_name) when is_binary(state_name) do
     config = settings!()

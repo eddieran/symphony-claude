@@ -25,11 +25,28 @@ hooks:
     fi
   before_remove: |
     cd elixir && mise exec -- mix workspace.before_remove
+# agent.backend: "codex" (default) or "claude"
+# To use Claude Code instead of Codex, set backend and add a claude section:
+#   agent:
+#     backend: claude
+#     max_concurrent_agents: 10
+#     max_turns: 20
+#   claude:
+#     command: claude
+#     model: claude-sonnet-4-20250514
+#     permission_mode: bypassPermissions
+#     turn_timeout_ms: 3600000
 agent:
+  backend: claude
   max_concurrent_agents: 10
   max_turns: 20
+claude:
+  command: claude
+  model: claude-sonnet-4-20250514
+  permission_mode: bypassPermissions
+  turn_timeout_ms: 3600000
 codex:
-  command: codex --config shell_environment_policy.inherit=all --config model_reasoning_effort=xhigh --model gpt-5.3-codex app-server
+  command: codex --config shell_environment_policy.inherit=all --config model_reasoning_effort=high --model gpt-5.3-codex app-server
   approval_policy: never
   thread_sandbox: workspace-write
   turn_sandbox_policy:
